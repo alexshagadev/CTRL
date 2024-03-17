@@ -23,11 +23,11 @@ public class PlayerMovement : MonoBehaviour
     bool isGrounded;
 
     [Header("Coyote Time")]
-    public float coyoteTimeDuration = 0f; // How long after leaving the ground the player can still jump (in seconds).
+    public float coyoteTimeDuration = 0.2f; // How long after leaving the ground the player can still jump (in seconds).
     float coyoteTimeCounter; // Counter for the Coyote Time.
 
     [Header("Jump Buffering")]
-    public float jumpBufferLength = 0f; // How long to buffer a jump input (in seconds).
+    public float jumpBufferLength = 0.2f; // How long to buffer a jump input (in seconds).
     float jumpBufferCounter; // Counter for jump buffering.
 
 
@@ -131,27 +131,12 @@ public class PlayerMovement : MonoBehaviour
 
         // Jump if jump input is received and the player is grounded
         // COYOTE TIME & JUMP BUFFER HINT: think about how you can use this condition ((isGrounded || coyoteTimeCounter > 0) && jumpBufferCounter > 0)
-        if (jumpInput && isGrounded)
+        if ((isGrounded || coyoteTimeCounter > 0) && jumpBufferCounter > 0)
         {
             rb.velocity = new Vector2(rb.velocity.x, jumpForce);
-            jumpInput = false;
+            coyoteTimeCounter = 0;
+            jumpBufferCounter = 0; // Reset both counters after jumping.
         }
-    }
-
-    // This method handles coyote time.
-    void HandleCoyoteTime()
-    {
-        // Create a basic timer system using coyoteTimeCounter and coyoteTimeDuration.
-        // HINT: if the player is grounded, resetting the counter is a good idea.
-        // HINT: Time.deltaTime is awesome!
-    }
-
-    // This method handles jump buffering.
-    void HandleJumpBuffer()
-    {
-        // Create a basic timer system using jumpBufferCounter and jumpBuffer length.
-        // HINT: if the player is giving input, resetting the counter is a good idea.
-        // HINT: Time.deltaTime is awesome!
     }
 
     // This is a method that will dislpay the ground check BoxCast in the editor using a red color. 
@@ -164,5 +149,31 @@ public class PlayerMovement : MonoBehaviour
         Vector2 groundCheckStartPos = new Vector2(transform.position.x, transform.position.y + groundCheckYOffset);
         // Use DrawWireCube to visualize the BoxCast. The cube size parameter is doubled because Gizmos.DrawWireCube defines size in terms of full width and height, not radius.
         Gizmos.DrawWireCube(groundCheckStartPos + Vector2.down * 0.1f, new Vector3(groundCheckBoxSize.x, groundCheckBoxSize.y, 0));
+    }
+
+    void HandleCoyoteTime()
+    {
+        if (isGrounded)
+        {
+            coyoteTimeCounter = coyoteTimeDuration;
+        }
+        else
+        {
+            coyoteTimeCounter -= Time.deltaTime;
+        }
+    }
+
+    void HandleJumpBuffer()
+    {
+        // Handle jump input specifically for jump buffering here
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            jumpBufferCounter = jumpBufferLength; // Activate jump buffer when space is pressed.
+        }
+
+        if (jumpBufferCounter > 0)
+        {
+            jumpBufferCounter -= Time.deltaTime; // Decrease the jump buffer counter over time.
+        }
     }
 }
